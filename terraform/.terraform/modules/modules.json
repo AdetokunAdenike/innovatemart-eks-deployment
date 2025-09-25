@@ -1,1 +1,0 @@
-{"Modules":[{"Key":"","Source":"","Dir":"."},{"Key":"eks","Source":"./eks.tf","Dir":"eks.tf"},{"Key":"iam","Source":"./iam.tf","Dir":"iam.tf"},{"Key":"vpc","Source":"./vpc.tf","Dir":"vpc.tf"}]}
