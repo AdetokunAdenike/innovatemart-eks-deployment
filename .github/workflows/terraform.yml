@@ -1,5 +1,6 @@
-name: Terraform CI/CD
+name: Terraform & EKS Deployment
 
+# Trigger workflow on pushes to main or feature branches
 on:
   push:
     branches:
@@ -8,47 +9,79 @@ on:
 
 jobs:
   terraform:
-    name: Terraform
+    name: Terraform Apply
     runs-on: ubuntu-latest
 
     env:
-      TF_ROOT: ./terraform-main
-      TF_VERSION: 1.6.7
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: eu-west-1
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      - name: Checkout Repository
+        uses: actions/checkout@v3
 
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v2
-      with:
-        terraform_version: ${{ env.TF_VERSION }}
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.6.0
 
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v2
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: eu-west-1
+      - name: Terraform Init
+        run: terraform init
 
-    - name: Terraform Init
-      working-directory: ${{ env.TF_ROOT }}
-      run: terraform init -input=false
+      - name: Terraform Format
+        run: terraform fmt -check
 
-    - name: Terraform Format Check
-      working-directory: ${{ env.TF_ROOT }}
-      run: terraform fmt -check
+      - name: Terraform Validate
+        run: terraform validate
 
-    - name: Terraform Validate
-      working-directory: ${{ env.TF_ROOT }}
-      run: terraform validate
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan -out=tfplan
 
-    - name: Terraform Plan
-      if: github.ref != 'refs/heads/main'
-      working-directory: ${{ env.TF_ROOT }}
-      run: terraform plan -out=tfplan -input=false
+      # Manual approval for main branch
+      - name: Manual Approval (main only)
+        if: github.ref == 'refs/heads/main'
+        uses: hmarr/auto-approve-action@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Terraform Apply
-      if: github.ref == 'refs/heads/main'
-      working-directory: ${{ env.TF_ROOT }}
-      run: terraform apply -auto-approve tfplan
+      - name: Terraform Apply
+        run: terraform apply -auto-approve tfplan
+
+  deploy:
+    name: Deploy App to EKS
+    runs-on: ubuntu-latest
+    needs: terraform
+
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: eu-west-1
+      KUBECONFIG: ${{ github.workspace }}/kubeconfig
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: '1.32.0'
+
+      - name: Install AWS CLI
+        uses: aws-actions/configure-aws-cli@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-1
+
+      - name: Update Kubeconfig
+        run: |
+          aws eks update-kubeconfig --name $(terraform output -raw eks_cluster_name) --region eu-west-1 --kubeconfig $KUBECONFIG
+
+
+      - name: Deploy Retail Store App
+        run: |
+          kubectl apply -f k8s-manifests/
+          kubectl rollout status deployment/nginx-deployment
