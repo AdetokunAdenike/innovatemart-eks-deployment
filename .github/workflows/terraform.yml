@@ -47,7 +47,9 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Terraform Apply
-        run: terraform apply -auto-approve tfplan
+        run: |
+          set -o xtrace
+          terraform apply -auto-approve tfplan
 
   deploy:
     name: Deploy App to EKS
@@ -78,8 +80,10 @@ jobs:
 
       - name: Update Kubeconfig
         run: |
-          aws eks update-kubeconfig --name $(terraform output -raw eks_cluster_name) --region eu-west-1 --kubeconfig $KUBECONFIG
-
+          aws eks update-kubeconfig \
+            --name $(terraform output -raw eks_cluster_name) \
+            --region eu-west-1 \
+            --kubeconfig $KUBECONFIG
 
       - name: Deploy Retail Store App
         run: |
