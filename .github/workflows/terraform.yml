@@ -1,6 +1,5 @@
 name: Terraform & EKS Deployment
 
-# Trigger workflow on pushes to main or feature branches
 on:
   push:
     branches:
@@ -16,6 +15,10 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       AWS_DEFAULT_REGION: eu-west-1
+
+    defaults:
+      run:
+        working-directory: infra/terraform-setup
 
     steps:
       - name: Checkout Repository
@@ -39,17 +42,9 @@ jobs:
         id: plan
         run: terraform plan -out=tfplan
 
-      # Manual approval for main branch
-      - name: Manual Approval (main only)
-        if: github.ref == 'refs/heads/main'
-        uses: hmarr/auto-approve-action@v2
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Terraform Apply
-        run: |
-          set -o xtrace
-          terraform apply -auto-approve tfplan
+        if: github.ref == 'refs/heads/main'
+        run: terraform apply -auto-approve tfplan
 
   deploy:
     name: Deploy App to EKS
@@ -79,6 +74,7 @@ jobs:
           aws-region: eu-west-1
 
       - name: Update Kubeconfig
+        working-directory: infra/terraform-setup
         run: |
           aws eks update-kubeconfig \
             --name $(terraform output -raw eks_cluster_name) \
