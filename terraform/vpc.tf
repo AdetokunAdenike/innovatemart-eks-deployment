@@ -2,7 +2,7 @@ resource "aws_vpc" "main" {
   cidr_block           = "10.0.0.0/24"
   enable_dns_support   = true
   enable_dns_hostnames = true
-  tags = { Name = "${var.cluster_name}-vpc" }
+  tags                 = { Name = "${var.cluster_name}-vpc" }
 }
 
 data "aws_availability_zones" "available" {}
@@ -12,14 +12,14 @@ resource "aws_subnet" "public" {
   cidr_block              = "10.0.0.0/25"
   map_public_ip_on_launch = true
   availability_zone       = data.aws_availability_zones.available.names[0]
-  tags = { Name = "${var.cluster_name}-public-subnet" }
+  tags                    = { Name = "${var.cluster_name}-public-subnet" }
 }
 
 resource "aws_subnet" "private" {
   vpc_id            = aws_vpc.main.id
   cidr_block        = "10.0.0.128/25"
   availability_zone = data.aws_availability_zones.available.names[1]
-  tags = { Name = "${var.cluster_name}-private-subnet" }
+  tags              = { Name = "${var.cluster_name}-private-subnet" }
 }
 
 resource "aws_internet_gateway" "igw" {

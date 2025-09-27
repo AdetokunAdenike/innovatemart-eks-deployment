@@ -2,7 +2,7 @@ resource "aws_eks_cluster" "main" {
   name     = var.cluster_name
   role_arn = aws_iam_role.eks_cluster_role.arn
 
-  version  = "1.32"
+  version = "1.32"
 
   vpc_config {
     subnet_ids = [
@@ -15,7 +15,7 @@ resource "aws_eks_cluster" "main" {
     Name = var.cluster_name
   }
 
-lifecycle {
+  lifecycle {
     ignore_changes = [
       bootstrap_self_managed_addons
     ]

@@ -33,7 +33,7 @@ jobs:
         run: terraform init
 
       - name: Terraform Format
-        run: terraform fmt -check
+        run: terraform fmt -recursive
 
       - name: Terraform Validate
         run: terraform validate
