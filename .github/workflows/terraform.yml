@@ -18,7 +18,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: infra/terraform-setup
+        working-directory: terraform
 
     steps:
       - name: Checkout Repository
@@ -74,7 +74,7 @@ jobs:
           aws-region: eu-west-1
 
       - name: Update Kubeconfig
-        working-directory: infra/terraform-setup
+        working-directory: terraform
         run: |
           aws eks update-kubeconfig \
             --name $(terraform output -raw eks_cluster_name) \
