@@ -1,0 +1,16 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::686255972322:root"
+      },
+      "Action": "s3:*",
+      "Resource": [
+        "arn:aws:s3:::innovatemart-terraform-state-eu-west-1-nikki",
+        "arn:aws:s3:::innovatemart-terraform-state-eu-west-1-nikki/*"
+      ]
+    }
+  ]
+}
