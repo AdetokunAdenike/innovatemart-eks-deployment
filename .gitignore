@@ -5,3 +5,4 @@
 crash.log
 *.tfvars
 .terraform/
+k8s/aws-auth.yaml
