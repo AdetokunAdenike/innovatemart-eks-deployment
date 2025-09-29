@@ -53,7 +53,7 @@ jobs:
         if: github.ref == 'refs/heads/main'
         run: terraform apply -auto-approve tfplan
 
-      # Save EKS cluster name and region for downstream jobs
+      # Save EKS cluster name for downstream job
       - name: Save EKS cluster info
         if: success()
         run: |
@@ -81,11 +81,8 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_DEFAULT_REGION }}
 
-      - name: Install AWS CLI
-        uses: aws-actions/setup-aws-cli@v2
-
       - name: Install kubectl
-        uses: actions/setup-kubectl@v4
+        uses: azure/setup-kubectl@v3
         with:
           version: v1.32.0
 
