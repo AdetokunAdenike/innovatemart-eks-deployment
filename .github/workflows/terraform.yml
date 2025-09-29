@@ -59,7 +59,9 @@ jobs:
       - name: Save EKS cluster name
         if: success()
         id: eksname
-        run: echo "EKS_NAME=$(terraform output -raw eks_cluster_name)" >> $GITHUB_ENV
+        run: |
+          CLUSTER_NAME=$(terraform output -raw eks_cluster_name 2>/dev/null | tr -d '\r')
+          echo "EKS_NAME=$CLUSTER_NAME" >> $GITHUB_ENV
 
   deploy:
     name: Deploy Retail Store App to EKS
