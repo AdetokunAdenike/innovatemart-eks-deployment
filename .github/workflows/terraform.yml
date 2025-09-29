@@ -53,12 +53,12 @@ jobs:
         if: github.ref == 'refs/heads/main'
         run: terraform apply -auto-approve tfplan
 
-      # ✅ FIXED: Save EKS cluster name correctly
+      # Save EKS cluster name
       - name: Save EKS cluster name
         if: success()
         id: eksname
         run: |
-          CLUSTER_NAME=$(terraform output -raw eks_cluster_name)
+          CLUSTER_NAME=$(terraform output -raw eks_cluster_name 2>/dev/null | head -n 1 | tr -d '\r')
           echo "EKS_NAME=$CLUSTER_NAME" >> $GITHUB_ENV
 
   deploy:
