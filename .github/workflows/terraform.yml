@@ -97,24 +97,10 @@ jobs:
             --region $AWS_DEFAULT_REGION \
             --kubeconfig $KUBECONFIG
 
-      - name: Clone retail-store sample (upstream)
+      - name: Apply Kubernetes manifests from k8s folder
         run: |
-          git clone https://github.com/aws-containers/retail-store-sample-app.git retail-store || true
-          ls -la retail-store
-
-      - name: Apply Kubernetes manifests (preferred path)
-        run: |
-          set -euo pipefail
-          if [ -d "retail-store/kubernetes" ]; then
-            echo "Applying manifests from retail-store/kubernetes"
-            kubectl apply -R -f retail-store/kubernetes
-          elif [ -d "retail-store/deployment" ]; then
-            echo "Applying manifests from retail-store/deployment"
-            kubectl apply -R -f retail-store/deployment
-          else
-            echo "Fallback: applying everything under retail-store"
-            kubectl apply -R -f retail-store
-          fi
+          echo "Applying manifests from k8s/"
+          kubectl apply -R -f k8s/
 
       - name: Wait for deployments to become ready
         run: |
