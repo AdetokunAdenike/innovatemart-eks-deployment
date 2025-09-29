@@ -19,7 +19,6 @@ jobs:
     name: Terraform Plan & Apply
     runs-on: ubuntu-latest
 
-    # run terraform commands from the terraform/ directory in repo
     defaults:
       run:
         working-directory: terraform
@@ -50,17 +49,16 @@ jobs:
         id: plan
         run: terraform plan -out=tfplan -input=false
 
-      # Only auto-apply on main to follow safe workflow
       - name: Terraform Apply (main only)
         if: github.ref == 'refs/heads/main'
         run: terraform apply -auto-approve tfplan
 
-      # Persist cluster name output for the Deploy job
+      # Save EKS cluster name safely using JSON + jq
       - name: Save EKS cluster name
         if: success()
         id: eksname
         run: |
-          CLUSTER_NAME=$(terraform output -raw eks_cluster_name 2>/dev/null | tr -d '\r')
+          CLUSTER_NAME=$(terraform output -json eks_cluster_name | jq -r .)
           echo "EKS_NAME=$CLUSTER_NAME" >> $GITHUB_ENV
 
   deploy:
@@ -106,7 +104,6 @@ jobs:
       - name: Apply Kubernetes manifests (preferred path)
         run: |
           set -euo pipefail
-          # Try canonical k8s manifests directory first, then fall back to root
           if [ -d "retail-store/kubernetes" ]; then
             echo "Applying manifests from retail-store/kubernetes"
             kubectl apply -R -f retail-store/kubernetes
@@ -120,7 +117,6 @@ jobs:
 
       - name: Wait for deployments to become ready
         run: |
-          # Wait for pods to be ready in the default namespace for up to 10m
           timeout=600
           echo "Waiting for pods to be ready (timeout ${timeout}s)..."
           kubectl wait --for=condition=Ready pods --all --timeout=${timeout}s || true
