@@ -53,11 +53,11 @@ jobs:
         if: github.ref == 'refs/heads/main'
         run: terraform apply -auto-approve tfplan
 
-      # Save EKS cluster name for downstream job
       - name: Save EKS cluster info
         if: success()
         run: |
-          echo "EKS_NAME=$(terraform output -raw eks_cluster_name)" >> $GITHUB_ENV
+          EKS_NAME=$(terraform output -raw eks_cluster_name)
+          echo "EKS_NAME=$EKS_NAME" >> $GITHUB_ENV
           echo "REGION=${AWS_DEFAULT_REGION}" >> $GITHUB_ENV
 
   deploy:
@@ -82,13 +82,17 @@ jobs:
           aws-region: ${{ env.AWS_DEFAULT_REGION }}
 
       - name: Install kubectl
-        uses: azure/setup-kubectl@v3
+        uses: azure/setup-kubectl@v4
         with:
           version: v1.32.0
 
       - name: Update kubeconfig for cluster
         run: |
           echo "Using cluster name: $EKS_NAME"
+          if [ -z "$EKS_NAME" ]; then
+            echo "ERROR: EKS_NAME is empty. Check terraform outputs."
+            exit 1
+          fi
           aws eks update-kubeconfig \
             --name "$EKS_NAME" \
             --region $AWS_DEFAULT_REGION \
