@@ -39,5 +39,13 @@ resource "aws_eks_node_group" "main" {
   tags = {
     Name = "${var.cluster_name}-nodegroup"
   }
+}
 
+resource "aws_security_group_rule" "allow_lb_to_nodes" {
+  type                     = "ingress"
+  from_port                = 8080
+  to_port                  = 8080
+  protocol                 = "tcp"
+  security_group_id        = "sg-01abfba9ab03a44ed"    # node group SG
+  source_security_group_id = "sg-0c7bbf43c5b3775a7"    # ELB SG
 }
