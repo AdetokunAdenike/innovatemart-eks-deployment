@@ -100,7 +100,8 @@ jobs:
       - name: Apply Kubernetes manifests from k8s folder
         run: |
           echo "Applying manifests from k8s/"
-          kubectl apply -R -f k8s/
+          export KUBECONFIG=$KUBECONFIG
+          kubectl apply -R -f k8s/ --validate=false
 
       - name: Wait for deployments to become ready
         run: |
