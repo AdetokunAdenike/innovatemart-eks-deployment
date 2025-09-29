@@ -74,17 +74,26 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install kubectl
-        uses: actions/setup-kubectl@v4
-        with:
-          version: v1.32.0
-
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_DEFAULT_REGION }}
+
+      - name: Install kubectl (match EKS version)
+        run: |
+          CLUSTER_VERSION=$(aws eks describe-cluster \
+            --name $EKS_NAME \
+            --region $AWS_DEFAULT_REGION \
+            --query "cluster.version" \
+            --output text)
+          echo "Cluster is running Kubernetes version $CLUSTER_VERSION"
+          curl -o kubectl \
+            https://s3.us-west-2.amazonaws.com/amazon-eks/$CLUSTER_VERSION/2023-07-05/bin/linux/amd64/kubectl
+          chmod +x ./kubectl
+          sudo mv ./kubectl /usr/local/bin/kubectl
+          kubectl version --client
 
       - name: Update kubeconfig for cluster
         run: |
