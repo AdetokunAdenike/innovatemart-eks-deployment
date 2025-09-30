@@ -19,3 +19,6 @@ spec:
         image: public.ecr.aws/aws-containers/retail-store-sample-ui:1.0.0
         ports:
         - containerPort: 8080
+        env:
+        - name: SERVER_ADDRESS
+          value: "0.0.0.0"
