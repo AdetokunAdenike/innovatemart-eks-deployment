@@ -132,3 +132,10 @@ The deployment provisions and configures the following resources:
   ```
   http://aabd4ae2515954471bcd2c904e947803-1371507698.eu-west-1.elb.amazonaws.com
   ```  
+---
+
+### Application Access
+The UI service is exposed via an AWS Elastic Load Balancer (ELB).  
+You can access the application at:
+
+http://aabd4ae2515954471bcd2c904e947803-090f4605e2c86c83.elb.eu-west-1.amazonaws.com
